@@ -32,8 +32,8 @@ export class PaymentsService {
             },
             line_items: line_items,
             mode: `payment`,
-            success_url: 'http://nodedev:3003/api/payments/success',
-            cancel_url: 'http://nodedev:3003/api/payments/cancel',
+            success_url: envs.stripeSuccessUrl,
+            cancel_url: envs.stripeCancelUrl,
         });
         return session;
     }
@@ -43,13 +43,7 @@ export class PaymentsService {
         
         let event: Stripe.Event;
 
-        // Para testing: recuerda que al levantarlo con
-        // docker run --rm -it -v ~/.config/stripe:/root/.config/stripe stripe/stripe-cli:latest listen --forward-to http://172.17.0.1:3003/api/payments/webhook
-        // Obtienes este endpoingSecret
-        const endpointSecret = 'whsec_fccadb4c824ec53a30b644de4c00bc387995f692786d131c6b46600585f003c5'
-
-        // Para prod, cuando añades un webhook en stripe, te da el Signing secret (que no es el STRIPE_SECRET)
-        // const endpointSecret = ''
+        const endpointSecret = envs.stripeEndpointSecret;
 
         try {
             event = this.stripe.webhooks.constructEvent(req['rawBody'], sig, endpointSecret)
