@@ -6,7 +6,10 @@ import { envs } from './config/envs';
 async function bootstrap() {
   const logger = new Logger('Main-Payments');
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    // Necesario para stripe: envía el body como un buffer
+    rawBody: true,
+  });
 
   app.setGlobalPrefix('api');
 
