@@ -2,6 +2,7 @@ import { Body, Controller, Get, Logger, Post, Req, Res } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { PaymentSessionDto } from './dto/payment-session.dto';
 import type { Request, Response } from 'express';
+import { MessagePattern } from '@nestjs/microservices';
 
 @Controller('payments')
 export class PaymentsController {
@@ -9,9 +10,18 @@ export class PaymentsController {
 
   constructor(private readonly paymentsService: PaymentsService) {}
 
+  // Podría mantener el @Post, pero solo me va a valer para invocar esto desde Insomnia
+  // Ya que será otro microservicio quien envíe un mensaje a NATS y no será usando la RestFullApi
+  //! Nota importante: para que se valide el DTO también por @MessagePattern hay que realizar
+  //! en "main.ts" esta configuración ({ inheritAppConfig: true }) que está aquí documentado:
+  //! https://docs.nestjs.com/faq/hybrid-application#sharing-configuration
+  //! Retornará un http 500 cuando no pueda validar el DTO
   @Post('create-payment-session')
+  @MessagePattern('create.payment.session')
   createPaymentSession(@Body( ) paymentSessionDto: PaymentSessionDto) {
-    return this.paymentsService.createPaymentSession(paymentSessionDto);
+    // FIXME: temporalmente retorno el paymentSessionDto para comprobar que está correcto
+    return paymentSessionDto;
+    // return this.paymentsService.createPaymentSession(paymentSessionDto);
   }
 
   @Get('success')
