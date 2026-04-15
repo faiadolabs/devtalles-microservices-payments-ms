@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, Req, Res } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { PaymentSessionDto } from './dto/payment-session.dto';
 import type { Request, Response } from 'express';
 
 @Controller('payments')
 export class PaymentsController {
+  private readonly logger = new Logger('Controller-Payments');
+
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('create-payment-session')
@@ -31,7 +33,11 @@ export class PaymentsController {
   // Tomo la req y res directamente (de express) porque stripe pide Raw-Body
   @Post('webhook')
   async webhook(@Req() req: Request, @Res() res: Response) {
-    
+    this.logger.debug("Se recibe un webhook");
+
+    // En desarrollo, lanzo la cli y hago login, generando un token que luego me valdrá para lanzar listen y trigger
+    // docker run --rm -it -v ~/.config/stripe:/root/.config/stripe stripe/stripe-cli:latest login
+
     // En desarrollo, utilizo el cli para el forwarding del webhook
     // docker run --rm -it -v ~/.config/stripe:/root/.config/stripe stripe/stripe-cli:latest listen --forward-to http://172.17.0.1:3003/api/payments/webhook
     

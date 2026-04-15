@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import Stripe from "node_modules/stripe/esm/stripe.esm.node";
 import { envs } from "src/config/envs";
 import { PaymentSessionDto, PaymentSessionItemDto } from "./dto/payment-session.dto";
@@ -6,6 +6,7 @@ import { Request, response, Response } from "express";
 
 @Injectable()
 export class PaymentsService {
+    private readonly logger = new Logger('Service-Payments');
     private readonly stripe = new Stripe(envs.stripeSecret);
 
     async createPaymentSession(paymentSessionDto: PaymentSessionDto) {
@@ -49,7 +50,7 @@ export class PaymentsService {
             event = this.stripe.webhooks.constructEvent(req['rawBody'], sig, endpointSecret)
         } catch (error) {
             if (error instanceof Error) {
-                console.log(`Este es el error: ${error.message}`)
+                this.logger.error(`Este es el error: ${error.message}`)
                 return res.status(400).send(`Webhook Error: ${error.message}`);
             }
             return res.status(400).send(`Webhook Error`);
@@ -59,7 +60,7 @@ export class PaymentsService {
             case 'charge.succeeded':
                 //TODO: llamar microservicio
                 const chargeSucceded = event.data.object;
-                console.log({ 
+                this.logger.debug({ 
                     sig,
                     event, 
                     metadata: chargeSucceded.metadata,
