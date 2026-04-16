@@ -1,8 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
+// FIXME: comprobar esta importación que desde vscode falla
 import Stripe from "node_modules/stripe/esm/stripe.esm.node";
 import { envs } from "src/config/envs";
 import { PaymentSessionDto, PaymentSessionItemDto } from "./dto/payment-session.dto";
 import { Request, response, Response } from "express";
+
 
 @Injectable()
 export class PaymentsService {
@@ -36,7 +38,15 @@ export class PaymentsService {
             success_url: envs.stripeSuccessUrl,
             cancel_url: envs.stripeCancelUrl,
         });
-        return session;
+
+        // Demasiada información:
+        // return session;
+
+        return {
+            cancelUrl: session.cancel_url,
+            successUrl: session.success_url,
+            url: session.url,
+        }
     }
 
     async stripeWebhookPaymentHandler(req: Request, res: Response) {

@@ -19,9 +19,7 @@ export class PaymentsController {
   @Post('create-payment-session')
   @MessagePattern('create.payment.session')
   createPaymentSession(@Body( ) paymentSessionDto: PaymentSessionDto) {
-    // FIXME: temporalmente retorno el paymentSessionDto para comprobar que está correcto
-    return paymentSessionDto;
-    // return this.paymentsService.createPaymentSession(paymentSessionDto);
+    return this.paymentsService.createPaymentSession(paymentSessionDto);
   }
 
   @Get('success')
