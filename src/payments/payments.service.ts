@@ -1,15 +1,21 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 // FIXME: comprobar esta importación que desde vscode falla
 import Stripe from "node_modules/stripe/esm/stripe.esm.node";
 import { envs } from "src/config/envs";
 import { PaymentSessionDto, PaymentSessionItemDto } from "./dto/payment-session.dto";
 import { Request, response, Response } from "express";
+import { ClientProxy } from "@nestjs/microservices";
+import { NATS_SERVICE } from "src/transports/config/services";
 
 
 @Injectable()
 export class PaymentsService {
     private readonly logger = new Logger('Service-Payments');
     private readonly stripe = new Stripe(envs.stripeSecret);
+
+    constructor(
+        @Inject(NATS_SERVICE) private readonly client:ClientProxy,
+    ){}
 
     async createPaymentSession(paymentSessionDto: PaymentSessionDto) {
 
@@ -68,13 +74,20 @@ export class PaymentsService {
 
         switch( event.type ){
             case 'charge.succeeded':
-                //TODO: llamar microservicio
                 const chargeSucceded = event.data.object;
-                this.logger.debug({ 
-                    sig,
-                    event, 
-                    metadata: chargeSucceded.metadata,
-                });
+                // this.logger.debug({ 
+                //     sig,
+                //     event, 
+                //     metadata: chargeSucceded.metadata,
+                // });
+                const payload = {
+                    stripePaymentId: chargeSucceded.id,
+                    orderId: chargeSucceded.metadata.orderId,
+                    receiptUrl: chargeSucceded.receipt_url,
+                }
+                this.logger.debug(`Emitiendo evento con este payload: ${payload}`);
+                this.client.emit('payment.succeeded', payload);
+                //! Aquí el evento no espera ningún retorno, seguirá su ejecución
                 break;
             default:
                 // En el caso del resto de eventos no hay nada que hacer
